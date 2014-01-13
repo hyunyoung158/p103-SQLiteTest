@@ -59,6 +59,9 @@
             NSLog(@"creating table with ret : %d", ret);
         }
     }
+    //데이터 베이스 오픈은 항상 해줘야.
+    int ret = sqlite3_open([dbFilePath UTF8String], &db);
+    NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
 }
 
 // 새로운 데이터를 데이터베이스에 저장한다.
