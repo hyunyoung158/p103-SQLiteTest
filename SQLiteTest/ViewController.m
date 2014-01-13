@@ -31,12 +31,23 @@
     BOOL existFile = [fm fileExistsAtPath:dbFilePath];
     
     //데이터 베이스 오픈
-    int ret = sqlite3_open([dbFilePath UTF8String], &db);
-    NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
-    NSLog(@"Success on Opening Database");
+//    int ret = sqlite3_open([dbFilePath UTF8String], &db);
+//    NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
+//    NSLog(@"Success on Opening Database");
     
     //새롭게 데이터베이스를 만들었으면 테이블을 생성한다.
     if (NO == existFile) {
+        NSString *defaultDBPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"db.sqlite"];
+        NSError *error;
+        BOOL success = [fm copyItemAtPath:defaultDBPath toPath:dbFilePath error:&error];
+        
+        if (!success) {
+            NSAssert1(0, @"Failed to create writable database file with message '%@'.", [error localizedDescription]);
+        }
+        
+        int ret = sqlite3_open([dbFilePath UTF8String], &db);
+        NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
+        NSLog(@"Success on Opening Database");
         //테이블 생성
         const char *createSQL = "CREATE TABLE IF NOT EXISTS MOVIE (TITLE TEXT)";
         char *errorMsg;

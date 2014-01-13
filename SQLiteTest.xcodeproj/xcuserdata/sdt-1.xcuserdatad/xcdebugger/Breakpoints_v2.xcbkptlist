@@ -10,11 +10,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SQLiteTest/ViewController.m"
-            timestampString = "411295441.46578"
+            timestampString = "411298871.324355"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "41"
-            endingLineNumber = "41"
+            startingLineNumber = "52"
+            endingLineNumber = "52"
             landmarkName = "-openDB"
             landmarkType = "5">
          </BreakpointContent>
@@ -26,11 +26,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "SQLiteTest/ViewController.m"
-            timestampString = "411295854.518794"
+            timestampString = "411298885.978774"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "31"
-            endingLineNumber = "31"
+            startingLineNumber = "41"
+            endingLineNumber = "41"
             landmarkName = "-openDB"
             landmarkType = "5">
          </BreakpointContent>
