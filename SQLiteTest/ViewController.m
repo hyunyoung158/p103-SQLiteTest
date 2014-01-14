@@ -7,6 +7,7 @@
 //
 
 #import "ViewController.h"
+#import "DetailViewController.h"
 #import "Movie.h"
 #import <sqlite3.h>
 
@@ -47,7 +48,7 @@
     NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
     NSLog(@"Success on Opening Database");
     //테이블 생성
-    const char *createSQL = "CREATE TABLE IF NOT EXISTS MOVIE (TITLE TEXT)";
+    const char *createSQL = "CREATE TABLE IF NOT EXISTS MOVIE (TITLE TEXT); CREATE TABLE IF NOT EXISTS ACTOR (NAME TEXT, rowid INT);";
     char *errorMsg;
     ret = sqlite3_exec(db, createSQL, NULL, NULL, &errorMsg);
     
@@ -144,7 +145,7 @@
 - (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath {
     if (UITableViewCellEditingStyleDelete == editingStyle) {
         Movie *one = [data objectAtIndex:indexPath.row];
-        NSString *sql = [NSString stringWithFormat:@"DELETE FROM MOVIE WHERE rowid=%d", one.rowID];
+        NSString *sql = [NSString stringWithFormat:@"DELETE FROM MOVIE WHERE rowid=%d; DELETE FROM ACTOR WHERE rowid=%d", one.rowID, one.rowID];
         
         NSLog(@"sql : %@", sql);
         
@@ -209,6 +210,17 @@
     }
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    DetailViewController *detailVC = segue.destinationViewController;
+    //sender는 테이블의 셀!
+    UITableViewCell *selectedCell = (UITableViewCell *)sender;
+    //셀을 이용해서 indexPath를 얻어온다.
+    NSIndexPath *selectedIndex = [self.table indexPathForCell:selectedCell];
+    Movie *movie = [data objectAtIndex:selectedIndex.row];
+    detailVC.cellRowId = movie.rowID;
+}
+
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -219,9 +231,14 @@
 - (void)viewWillAppear:(BOOL)animated {
     NSLog(@"viewWilAppear");
     [super viewWillAppear:animated];
+    [self.navigationController setNavigationBarHidden:YES]; //네비게이션 바 감추기
     [self resolveData];
 }
 
+- (void)viewWillDisappear:(BOOL)animated {
+    [super viewWillDisappear:animated];
+    [self.navigationController setNavigationBarHidden:NO]; //네비게이션 바 보이기
+}
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
