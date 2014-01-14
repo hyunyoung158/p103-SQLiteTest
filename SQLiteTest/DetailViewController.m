@@ -18,7 +18,6 @@
 @implementation DetailViewController {
     NSMutableArray *_data;
     sqlite3 *_db;
-    //네비게이션에서 넘어온 셀 의 데이터를 갖고싶당...
 }
 
 //+버튼 누를시 alertView
