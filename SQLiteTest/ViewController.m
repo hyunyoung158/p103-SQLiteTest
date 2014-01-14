@@ -10,7 +10,7 @@
 #import "Movie.h"
 #import <sqlite3.h>
 
-@interface ViewController ()<UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate>
+@interface ViewController ()<UITextFieldDelegate, UITableViewDataSource, UITableViewDelegate, UIAlertViewDelegate>
 
 @property (weak, nonatomic) IBOutlet UITableView *table;
 @end
@@ -18,6 +18,7 @@
 @implementation ViewController {
     NSMutableArray *data;
     sqlite3 *db;
+    NSInteger tmp;
 }
 
 //db 오픈 없으면 새로 만들기
@@ -30,12 +31,7 @@
     NSFileManager *fm = [NSFileManager defaultManager];
     BOOL existFile = [fm fileExistsAtPath:dbFilePath];
     
-    //데이터 베이스 오픈
-//    int ret = sqlite3_open([dbFilePath UTF8String], &db);
-//    NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
-//    NSLog(@"Success on Opening Database");
-    
-    //새롭게 데이터베이스를 만들었으면 테이블을 생성한다.
+    //없으면 데이터 베이스 파일 생성.
     if (NO == existFile) {
         NSString *defaultDBPath = [[[NSBundle mainBundle] resourcePath] stringByAppendingPathComponent:@"db.sqlite"];
         NSError *error;
@@ -44,24 +40,23 @@
         if (!success) {
             NSAssert1(0, @"Failed to create writable database file with message '%@'.", [error localizedDescription]);
         }
-        
-        int ret = sqlite3_open([dbFilePath UTF8String], &db);
-        NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
-        NSLog(@"Success on Opening Database");
-        //테이블 생성
-        const char *createSQL = "CREATE TABLE IF NOT EXISTS MOVIE (TITLE TEXT)";
-        char *errorMsg;
-        ret = sqlite3_exec(db, createSQL, NULL, NULL, &errorMsg);
-        
-        if (ret != SQLITE_OK) {
-            [fm removeItemAtPath:dbFilePath error:nil];
-            NSAssert1(SQLITE_OK == ret, @"Error on creating table: %s", errorMsg);
-            NSLog(@"creating table with ret : %d", ret);
-        }
+
     }
     //데이터 베이스 오픈은 항상 해줘야.
     int ret = sqlite3_open([dbFilePath UTF8String], &db);
     NSAssert1(SQLITE_OK == ret, @"Error on opening Database : %s", sqlite3_errmsg(db));
+    NSLog(@"Success on Opening Database");
+    //테이블 생성
+    const char *createSQL = "CREATE TABLE IF NOT EXISTS MOVIE (TITLE TEXT)";
+    char *errorMsg;
+    ret = sqlite3_exec(db, createSQL, NULL, NULL, &errorMsg);
+    
+    if (ret != SQLITE_OK) {
+        [fm removeItemAtPath:dbFilePath error:nil];
+        NSAssert1(SQLITE_OK == ret, @"Error on creating table: %s", errorMsg);
+        NSLog(@"creating table with ret : %d", ret);
+    }
+
 }
 
 // 새로운 데이터를 데이터베이스에 저장한다.
@@ -175,6 +170,45 @@
     cell.textLabel.text = one.title;
     return cell;
 }
+
+//셀 눌렀을때 알럿 뷰 띄우기..
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
+    NSLog(@"clicked %d", (int)indexPath.row);
+    
+    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"제목" message:@"제목을 수정하시려면 입력 후 완료를 눌러주세요." delegate:self cancelButtonTitle:@"취소" otherButtonTitles:@"완료", nil];
+    alert.alertViewStyle = UIAlertViewStylePlainTextInput;
+    //AlertView TextField 미리 채우기
+    UITextField *movieTextField = [alert textFieldAtIndex:0];
+    Movie *movie = [data objectAtIndex:indexPath.row];
+    movieTextField.text = movie.title;
+    [alert show];
+}
+
+//AlertView 내부 작동 로직
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex {
+    if (alertView.firstOtherButtonIndex == buttonIndex) {
+        UITextField *movieName = [alertView textFieldAtIndex:0];
+        NSLog(@"modified movieName : %@", movieName.text);
+        //Update 로직 구현
+        NSIndexPath *indexPath = [self.table indexPathForSelectedRow];
+        Movie *movie = [data objectAtIndex:indexPath.row];
+        NSString *sql = [NSString stringWithFormat:@"UPDATE MOVIE SET title='%@' WHERE rowid=%d", movieName.text, movie.rowID];
+        NSLog(@"sql : %@", sql);
+        
+        char *errMsg;
+        int ret = sqlite3_exec(db, [sql UTF8String], NULL, nil, &errMsg);
+        
+        if (SQLITE_OK != ret) {
+            NSLog(@"Error on Update New data : %s", errMsg);
+        }
+        //데이터 갱신
+        [self resolveData];
+        
+    }else {
+        NSLog(@"취소");
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -182,9 +216,8 @@
     [self openDB];
 }
 
-//- (void)viewDidUnload
-
 - (void)viewWillAppear:(BOOL)animated {
+    NSLog(@"viewWilAppear");
     [super viewWillAppear:animated];
     [self resolveData];
 }
